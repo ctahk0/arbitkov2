@@ -1,6 +1,7 @@
 $(document).ready(function() {
 	//Make connection
-	var socket = io.connect("http://localhost:8000");
+	// var socket = io.connect("http://localhost:8001");
+	var socket = io();
 
 	$('#example').dataTable( {
 				"language": {

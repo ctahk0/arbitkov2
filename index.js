@@ -4,7 +4,7 @@ var axios = require('axios');
 
 //App setup
 var app = express();
-var server = app.listen(8000, function(){
+var server = app.listen(8001, function(){
 	console.log("Server listening on port 8000");
 });
 
@@ -16,7 +16,7 @@ app.use(express.static(__dirname + '/public'));
 var io = socket(server);
 
 io.on('connection', function(socket){
-	console.log("Coneection open");
+	console.log("Conection open");
 	
 	// getprices(function(returnval) {
 	// 	// console.log(returnval);
