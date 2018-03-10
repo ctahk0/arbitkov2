@@ -188,6 +188,9 @@ async function getprices(callback){
                 if (coinName === "IOT") {
                       coinName = "IOTA";
                 }
+                if (coinName == 'DSH') {
+                	coinName = 'DASH';
+                }
             let bf_last = (bitfinex.data[key][7] * 1000);
             let ask = (bitfinex.data[key][3] * 1000);
             let bid = (bitfinex.data[key][1] * 1000);
