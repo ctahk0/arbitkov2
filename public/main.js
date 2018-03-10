@@ -15,7 +15,7 @@ $(document).ready(function() {
 		    	// "aaData": msg,
 		    	"processing":true,
 		    	"columnDefs": [
-				    { "sClass": "dt-body-right", "targets": [ 4,5,6,7,8,9,10,11,12,13 ] }
+				    { "sClass": "dt-body-right", "targets": [ 4,5,6,7,8,9,10,11,12,13,14,15 ] }
 				  ],
 		    	"aoColumns": [
 				      { "sTitle": "Symbol",   "mData": "coin","defaultContent": ""  },
@@ -26,6 +26,8 @@ $(document).ready(function() {
 				      { "sTitle": "Bid",  "mData": "BinBid","defaultContent": ""  },
 				      { "sTitle": "Kucoin Ask",  "mData": "KucoinAsk", "defaultContent": "" },
 				      { "sTitle": "Bid",  "mData": "KucoinBid","defaultContent": ""  },
+				      { "sTitle": "Hitbtc Ask",  "mData": "HitbtcAsk", "defaultContent": "" },
+				      { "sTitle": "Bid",  "mData": "HitbtcBid","defaultContent": ""  },
 				      { "sTitle": "Poloniex Ask",  "mData": "PolAsk", "defaultContent": "" },
 				      { "sTitle": "Bid",  "mData": "PolBid","defaultContent": ""  },
 				      { "sTitle": "Bitfinex Ask",  "mData": "BfAsk","defaultContent": "" },

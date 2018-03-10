@@ -43,7 +43,7 @@ async function getprices(callback){
 	var arrbittrex = [];
 	var arrkraken = [];
 	var arrkucoin = [];
-	var val;				//trenutna valuta koju punimo sa lastprice
+	var arrhitbtc = [];
 
 	try {
     	// then we grab some data over an Ajax request
@@ -57,7 +57,13 @@ async function getprices(callback){
     	const binancePrices = await axios('https://api.binance.com/api/v3/ticker/bookTicker');
     	const bittrex = await axios('https://bittrex.com/api/v1.1/public/getmarketsummaries');
     	const kraken = await axios('https://api.kraken.com/0/public/Ticker?pair=DASHXBT,EOSXBT,GNOXBT,ETCXBT,ETHXBT,ICNXBT,LTCXBT,MLNXBT,REPXBT,XDGXBT,XLMXBT,XMRXBT,XRPXBT,ZECXBT');
-		const kucoin = await axios('https://api.kucoin.com/v1/market/open/symbols');
+		// const kucoin = await axios('https://api.kucoin.com/v1/market/open/symbols');
+		const kucoin = await axios('https://api.kucoin.com/v1/open/tick');
+		const hitbtcInfo = await axios('https://api.hitbtc.com/api/2/public/currency');
+		const hitbtc = await axios('https://api.hitbtc.com/api/2/public/ticker');
+		const hitbtcPairs = await axios('https://api.hitbtc.com/api/2/public/symbol');
+		
+
 
     	// var obj_cryptopia_status = cryptopiaInfo.data.Data;
     	// var obj_cryptopia = cryptopiaBTC.data.Data;
@@ -364,7 +370,47 @@ async function getprices(callback){
 
 
         }
-    	
+        //======================== Hitbtc ===================================================================
+        for (let key in hitbtcPairs.data) {
+        	// console.log(hitbtcPairs.data[key].quoteCurrency);
+        	if (hitbtcPairs.data[key].quoteCurrency == 'BTC') {
+        		var coinName = hitbtcPairs.data[key].baseCurrency;
+        		//zavrtiti statuse TODO:
+
+        		for (let k in hitbtc.data) {
+        			if (hitbtc.data[k].symbol == hitbtcPairs.data[key].id) {
+        				// console.log(hitbtc.data[k].symbol);
+        				for (let n in hitbtcInfo.data) {
+        					if ((hitbtcInfo.data[n].id == coinName) 
+        						&& (hitbtcInfo.data[n].payinEnabled == true) 
+        						&& (hitbtcInfo.data[n].payoutEnabled == true) 
+        						&& (hitbtcInfo.data[n].transferEnabled == true) 
+        						&& (hitbtcInfo.data[n].delisted == false) 
+
+        						) {
+        						let last = (hitbtc.data[k].last * 1000);
+								let ask = (hitbtc.data[k].ask * 1000);
+					            let bid = (hitbtc.data[k].bid * 1000);
+							    arrhitbtc.push({
+					    			symbol: coinName,
+					    			askprice: Number(ask.toFixed(5)),
+					    			bidprice : Number(bid.toFixed(5))
+			    				});
+			    				if (typeof askarr[coinName] == "undefined") {
+								        askarr[coinName] = {};
+								}
+								if (typeof bidarr[coinName] == "undefined") {
+								    	bidarr[coinName] = {};
+								}
+								askarr[coinName].Hitbtc = ask;
+								bidarr[coinName].Hitbtc = bid;
+        					}
+
+        				}
+        			}
+        		}
+        	}
+        }
     	//===================================================================================================
 
     	// coins["ETH"].Stanko = 455.21;								//ovo radi ovako!
@@ -545,6 +591,18 @@ async function getprices(callback){
 					results[i].Kucoin = arrkucoin[n].lastprice;
 					results[i].KucoinAsk = arrkucoin[n].askprice;
 					results[i].KucoinBid = arrkucoin[n].bidprice;
+				}
+			}
+
+		}
+		for (let i = 0; i < arr.length; i++) {
+			for (let n = 0; n < arrhitbtc.length; n++) {
+				// console.log(arrhitbtc[n].symbol);
+				if (arr[i][0] == arrhitbtc[n].symbol) {
+					results[i].HitbtcSymbol = arrhitbtc[n].symbol;
+					results[i].Hitbtc = arrhitbtc[n].lastprice;
+					results[i].HitbtcAsk = arrhitbtc[n].askprice;
+					results[i].HitbtcBid = arrhitbtc[n].bidprice;
 				}
 			}
 
