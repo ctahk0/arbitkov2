@@ -42,6 +42,7 @@ async function getprices(callback){
 	var arrbinance = [];
 	var arrbittrex = [];
 	var arrkraken = [];
+	var arrkucoin = [];
 	var val;				//trenutna valuta koju punimo sa lastprice
 
 	try {
@@ -56,6 +57,7 @@ async function getprices(callback){
     	const binancePrices = await axios('https://api.binance.com/api/v3/ticker/bookTicker');
     	const bittrex = await axios('https://bittrex.com/api/v1.1/public/getmarketsummaries');
     	const kraken = await axios('https://api.kraken.com/0/public/Ticker?pair=DASHXBT,EOSXBT,GNOXBT,ETCXBT,ETHXBT,ICNXBT,LTCXBT,MLNXBT,REPXBT,XDGXBT,XLMXBT,XMRXBT,XRPXBT,ZECXBT');
+		const kucoin = await axios('https://api.kucoin.com/v1/market/open/symbols');
 
     	// var obj_cryptopia_status = cryptopiaInfo.data.Data;
     	// var obj_cryptopia = cryptopiaBTC.data.Data;
@@ -66,7 +68,7 @@ async function getprices(callback){
     	for (let key in obj_binanceInfo) {
     		if(obj_binanceInfo[key].symbol.includes('BTC')) {
     			// console.log(obj_binanceInfo[key].symbol, obj_binanceInfo[key].baseAssetName);
-    			let coinName = obj_binanceInfo[key].symbol.replace("BTC", '');
+    			var coinName = obj_binanceInfo[key].symbol.replace("BTC", '');
     			arrbinance.push({
 					symbol: coinName,
 					name: obj_binanceInfo[key].baseAssetName,
@@ -78,7 +80,7 @@ async function getprices(callback){
     	// console.log(arrbinance);
     	for (let key in binance.data) {
     		if(binance.data[key].symbol.includes('BTC')) {
-    			let coinName = binance.data[key].symbol.replace("BTC", '');
+    			var coinName = binance.data[key].symbol.replace("BTC", '');
             	let last = (binance.data[key].price * 1000);
             	
             	for (let n = 0; n < arrbinance.length; n++) {
@@ -97,7 +99,7 @@ async function getprices(callback){
 
     	for (var key in binancePrices.data) {
     		if(binancePrices.data[key].symbol.includes('BTC')) {
-    			let coinName = binancePrices.data[key].symbol.replace("BTC", '');
+    			var coinName = binancePrices.data[key].symbol.replace("BTC", '');
             	let ask = (binancePrices.data[key].askPrice * 1000);
             	let bid = (binancePrices.data[key].bidPrice * 1000);
             	let buyvolume = Number(binancePrices.data[key].askQty).formatMoney(2, '.', ',');
@@ -129,7 +131,7 @@ async function getprices(callback){
     	for (let key in obj_poloniex) {
     		for (let n in obj_poloniexInfo) {
 	    		if( key.replace("BTC_", '') == n) {
-	                let coinName = key.replace("BTC_", '');
+	                var coinName = key.replace("BTC_", '');
 	                let last = (obj_poloniex[key].last * 1000);
 	    			let ask = (obj_poloniex[key].lowestAsk * 1000);
 	    			let bid = (obj_poloniex[key].highestBid * 1000);
@@ -176,7 +178,7 @@ async function getprices(callback){
 											    // LOW
     	for (let key in bitfinex.data) {
         	let cn = bitfinex.data[key][0].replace("BTC", '');
-            let coinName = cn.substr(1);  //remove first character 't'
+            var coinName = cn.substr(1);  //remove first character 't'
                 if (coinName === "IOT") {
                       coinName = "IOTA";
                 }
@@ -233,7 +235,7 @@ async function getprices(callback){
 			  			sellvolume: sellvolume
 			  		});
 
-					let coinName = obj_cryptopia_status[n].Symbol;
+					var coinName = obj_cryptopia_status[n].Symbol;
 					if (coinName != 'BAT' && coinName != 'BTG' && coinName != 'BLZ' && coinName != 'FUEL'){
 						if (obj_cryptopia_status[n].Status == 'OK' 
 							&& obj_cryptopia_status[n].ListingStatus == 'Active') {
@@ -275,7 +277,7 @@ async function getprices(callback){
 			// console.log(obj);
 			// console.log(obj["MarketName"]);
         	if(obj["MarketName"].includes('BTC-')) {
-            	let coinName = obj["MarketName"].replace("BTC-", '');
+            	var coinName = obj["MarketName"].replace("BTC-", '');
 				let last = obj.Last;
 				let ask = (obj.Ask * 1000);
             	let bid = (obj.Bid * 1000);
@@ -331,6 +333,35 @@ async function getprices(callback){
 			}
 			askarr[coinName].Kraken = ask;
 			bidarr[coinName].Kraken = bid;
+
+        }
+        //======================== Kucoin ===================================================================
+        let kc = kucoin.data.data;
+        for (let key in kc) {
+        	// console.log(kc[key].coinTypePair);
+        	if (kc[key].coinTypePair == 'BTC') {
+        		var coinName = kc[key].coinType;
+        		let last = (kc[key].lastDealPrice * 1000);
+				let ask = (kc[key].sell * 1000);
+	            let bid = (kc[key].buy * 1000);
+	      //       let buyvolume = 
+	    		// let sellvolume = 
+
+	          	arrkucoin.push({
+	    			symbol: coinName,
+	    			askprice: Number(ask.toFixed(5)),
+	    			bidprice : Number(bid.toFixed(5))
+	    		});
+	          	if (typeof askarr[coinName] == "undefined") {
+				        askarr[coinName] = {};
+				}
+				if (typeof bidarr[coinName] == "undefined") {
+				    	bidarr[coinName] = {};
+				}
+				askarr[coinName].Kucoin = ask;
+				bidarr[coinName].Kucoin = bid;
+        	}
+
 
         }
     	
@@ -502,6 +533,18 @@ async function getprices(callback){
 					results[i].Kraken = arrkraken[n].lastprice;
 					results[i].KrakenAsk = arrkraken[n].askprice;
 					results[i].KrakenBid = arrkraken[n].bidprice;
+				}
+			}
+
+		}
+		for (let i = 0; i < arr.length; i++) {
+			for (let n = 0; n < arrkucoin.length; n++) {
+				// console.log(arrkucoin[n].symbol);
+				if (arr[i][0] == arrkucoin[n].symbol) {
+					results[i].KucoinSymbol = arrkucoin[n].symbol;
+					results[i].Kucoin = arrkucoin[n].lastprice;
+					results[i].KucoinAsk = arrkucoin[n].askprice;
+					results[i].KucoinBid = arrkucoin[n].bidprice;
 				}
 			}
 
