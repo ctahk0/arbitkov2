@@ -386,6 +386,7 @@ async function getprices(callback){
         						&& (hitbtcInfo.data[n].payoutEnabled == true) 
         						&& (hitbtcInfo.data[n].transferEnabled == true) 
         						&& (hitbtcInfo.data[n].delisted == false) 
+        						&& (hitbtcInfo.data[n].id != 'DSH')
 
         						) {
         						let last = (hitbtc.data[k].last * 1000);
