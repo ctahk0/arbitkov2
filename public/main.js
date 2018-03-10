@@ -24,14 +24,16 @@ $(document).ready(function() {
 				      { "sTitle": "Hi",  "mData": "Hi","defaultContent": ""  },
 				      { "sTitle": "Binance Ask",  "mData": "BinAsk","defaultContent": "" },
 				      { "sTitle": "Bid",  "mData": "BinBid","defaultContent": ""  },
-				      { "sTitle": "Cryptopia Ask",  "mData": "CrAsk", "defaultContent": "" },
-				      { "sTitle": "Bid",  "mData": "CrBid","defaultContent": ""  },
+				      // { "sTitle": "Cryptopia Ask",  "mData": "CrAsk", "defaultContent": "" },
+				      // { "sTitle": "Bid",  "mData": "CrBid","defaultContent": ""  },
 				      { "sTitle": "Poloniex Ask",  "mData": "PolAsk", "defaultContent": "" },
 				      { "sTitle": "Bid",  "mData": "PolBid","defaultContent": ""  },
 				      { "sTitle": "Bitfinex Ask",  "mData": "BfAsk","defaultContent": "" },
 				      { "sTitle": "Bid",  "mData": "BfBid","defaultContent": ""   },
 				      { "sTitle": "Bittrex Ask",  "mData": "BittrAsk","defaultContent": "" },
-				      { "sTitle": "Bid",  "mData": "BittrBid","defaultContent": ""   }
+				      { "sTitle": "Bid",  "mData": "BittrBid","defaultContent": ""   },
+				  	  { "sTitle": "Kraken Ask",  "mData": "KrakenAsk", "defaultContent": "" },
+				      { "sTitle": "Bid",  "mData": "KrakenBid","defaultContent": ""  },
 
 		    	]
 	});

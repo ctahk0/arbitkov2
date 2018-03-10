@@ -41,22 +41,24 @@ async function getprices(callback){
 	var arrbitfinex = [];
 	var arrbinance = [];
 	var arrbittrex = [];
+	var arrkraken = [];
 	var val;				//trenutna valuta koju punimo sa lastprice
 
 	try {
     	// then we grab some data over an Ajax request
-    	const cryptopiaInfo = await axios ('https://www.cryptopia.co.nz/api/GetCurrencies');
+    	// const cryptopiaInfo = await axios ('https://www.cryptopia.co.nz/api/GetCurrencies');
     	const bitfinex = await axios('https://api.bitfinex.com/v2/tickers?symbols=tBTCUSD,tLTCBTC,tETHBTC,tETCBTC,tRRTBTC,tZECBTC,tXMRBTC,tDSHBTC,tBTCEUR,tXRPBTC,tIOTBTC,tEOSBTC,tSANBTC,tOMGBTC,tBCHBTC,tNEOBTC,tETPBTC,tQTMBTC,tAVTBTC,tEDOBTC,tBTGBTC,tDATBTC,tQSHBTC,tYYWBTC,tGNTBTC,tSNTBTC,tBATBTC,tMNABTC,tFUNBTC,tZRXBTC,tTNBBTC,tSPKBTC,tTRXBTC,tRCNBTC,tRLCBTC,tAIDBTC,tSNGBTC,tREPBTC,tELFBTC');
-    	const cryptopiaBTC = await axios('https://www.cryptopia.co.nz/api/GetMarkets/BTC');
+    	// const cryptopiaBTC = await axios('https://www.cryptopia.co.nz/api/GetMarkets/BTC');
     	const poloniexBTC = await axios('https://poloniex.com/public?command=returnTicker');
     	const poloniexInfo = await axios('https://poloniex.com/public?command=returnCurrencies');
     	const binance = await axios('https://api.binance.com/api/v3/ticker/price');
     	const binanceInfo = await axios('https://www.binance.com/exchange/public/product');
     	const binancePrices = await axios('https://api.binance.com/api/v3/ticker/bookTicker');
     	const bittrex = await axios('https://bittrex.com/api/v1.1/public/getmarketsummaries');
+    	const kraken = await axios('https://api.kraken.com/0/public/Ticker?pair=DASHXBT,EOSXBT,GNOXBT,ETCXBT,ETHXBT,ICNXBT,LTCXBT,MLNXBT,REPXBT,XDGXBT,XLMXBT,XMRXBT,XRPXBT,ZECXBT');
 
-    	var obj_cryptopia_status = cryptopiaInfo.data.Data;
-    	var obj_cryptopia = cryptopiaBTC.data.Data;
+    	// var obj_cryptopia_status = cryptopiaInfo.data.Data;
+    	// var obj_cryptopia = cryptopiaBTC.data.Data;
     	var obj_poloniex = poloniexBTC.data;
     	var obj_poloniexInfo = poloniexInfo.data;
     	var obj_binanceInfo = binanceInfo.data.data;
@@ -206,7 +208,7 @@ async function getprices(callback){
     	}
     	
     	//======================== Cryptopia =============================================================
-    	for (let c in obj_cryptopia) {
+/*    	for (let c in obj_cryptopia) {
     		//kreiraj niz
     		for (let n in obj_cryptopia_status) {
     			//let symstr = obj_cryptopia[c].Label;
@@ -249,7 +251,7 @@ async function getprices(callback){
 					}
 		  		}	
     		}
-    	}
+    	}*/
     	//======================== Bittrex =============================================================
 
 							  // "success": true,
@@ -300,7 +302,37 @@ async function getprices(callback){
 			    bidarr[coinName].Bittrex = bid;
             }
         }
+        //======================== Kraken ===================================================================
+        for (let key in kraken.data.result) {
+        	let arr = key.match(/DASH|EOS|GNO|ETC|ETH|ICN|LTC|MLN|REP|XDG|XLM|XMR|XRP|ZEC/); // matching real names to weird kraken api coin pairs like "XETCXXBT" etc 
+            let name = key;
+            let matchedName = arr[0];
+            if (matchedName === "XDG") { //kraken calls DOGE "XDG" for whatever reason
+            	let matchedName = "DOGE";
+                var coinName = matchedName;
+            } else {
+                var coinName = matchedName;
+            }
+            let last = (kraken.data.result[name].c[0] * 1000);
+			let ask = (kraken.data.result[name].a[0] * 1000);
+            let bid = (kraken.data.result[name].b[0] * 1000);
+            // let buyvolume = 
+	    	// let sellvolume = 
+	    	arrkraken.push({
+	    		symbol: coinName,
+	    		askprice: Number(ask.toFixed(5)),
+	    		bidprice : Number(bid.toFixed(5))
+	    	});
+	    	if (typeof askarr[coinName] == "undefined") {
+			        askarr[coinName] = {};
+			}
+			if (typeof bidarr[coinName] == "undefined") {
+			    	bidarr[coinName] = {};
+			}
+			askarr[coinName].Kraken = ask;
+			bidarr[coinName].Kraken = bid;
 
+        }
     	
     	//===================================================================================================
 
@@ -359,7 +391,7 @@ async function getprices(callback){
 		var arr = [];
 		for (var key in askarr) {
 			// console.log(coins[key][0].ask);					//ukrstiti ask i bid niz po coinu
-			if (key != 'EUR' && key != 'USD' && key != 'USDT') {	//privremeno izbacujem USD EUR, ne prikazuje kako treba... treba istraziti
+			if (key != 'EUR') {	//privremeno izbacujem USD EUR, ne prikazuje kako treba... treba istraziti
 				for (var n in bidarr) {
 					if (n == key) {
 						let razlika = Number((((bidarr[n].Max / askarr[key].Min)-1) * 100).toFixed(3));
@@ -387,7 +419,7 @@ async function getprices(callback){
 						 	Hi: arr[i][3]
 			});
 		}
-		for (let i = 0; i < arr.length; i++) {
+/*		for (let i = 0; i < arr.length; i++) {
 			for (let n = 0; n < arrcryptopia.length; n++) {
 				// console.log(arrcryptopia[n].symbol);
 				if (arr[i][0] == arrcryptopia[n].symbol) {
@@ -403,7 +435,7 @@ async function getprices(callback){
 				}
 			}
 
-		}
+		}*/
 
 		for (let i = 0; i < results.length; i++) {
 			for (let n = 0; n < arrpoloniex.length; n++) {
@@ -458,6 +490,18 @@ async function getprices(callback){
 					results[i].BittrBid = arrbittrex[n].bidprice;
 					results[i].BittrBuyVol = arrbittrex[n].buyvolume;
 					results[i].BittrSellVol = arrbittrex[n].sellvolume;
+				}
+			}
+
+		}
+		for (let i = 0; i < arr.length; i++) {
+			for (let n = 0; n < arrkraken.length; n++) {
+				// console.log(arrkraken[n].symbol);
+				if (arr[i][0] == arrkraken[n].symbol) {
+					results[i].KrakenSymbol = arrkraken[n].symbol;
+					results[i].Kraken = arrkraken[n].lastprice;
+					results[i].KrakenAsk = arrkraken[n].askprice;
+					results[i].KrakenBid = arrkraken[n].bidprice;
 				}
 			}
 
