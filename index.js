@@ -1,6 +1,7 @@
 var express = require('express');
 var socket = require('socket.io');
 var axios = require('axios');
+var bodyParser = require('body-parser');
 
 //App setup
 var app = express();
@@ -11,6 +12,28 @@ var server = app.listen(8001, function(){
 //Static files
 app.use(express.static(__dirname + '/public'));
 // app.use(express.static('public'));
+
+
+
+// app.use(express.bodyParser());
+
+// parse application/json
+// app.use(bodyParser.json());
+app.use(bodyParser.text({ type: 'text/html' }));
+ 
+app.use(function (req, res) {
+  res.setHeader('Content-Type', 'text/plain')
+  res.write('you posted:\n')
+  res.end(JSON.stringify(req.body, null, 2))
+})
+
+
+// app.post('/endpoint', function(req, res){
+// 	var obj = {};
+// 	console.log('body: ' + JSON.stringify(req.body));
+// 	res.send(req.body);
+// });
+
 
 //Socket setup
 var io = socket(server);
@@ -44,6 +67,7 @@ async function getprices(callback){
 	var arrkraken = [];
 	var arrkucoin = [];
 	var arrhitbtc = [];
+	var arrokex = [];
 
 	try {
     	// then we grab some data over an Ajax request
@@ -62,6 +86,7 @@ async function getprices(callback){
 		const hitbtcInfo = await axios('https://api.hitbtc.com/api/2/public/currency');
 		const hitbtc = await axios('https://api.hitbtc.com/api/2/public/ticker');
 		const hitbtcPairs = await axios('https://api.hitbtc.com/api/2/public/symbol');
+		const okex = await axios('https://www.okex.com/v2/spot/markets/index-tickers?limit=200&quoteCurrency=0');
 		
 
 
@@ -415,6 +440,39 @@ async function getprices(callback){
         		}
         	}
         }
+        //======================== Okex ===================================================================
+        let ox = okex.data.data;
+        for (let key in ox) {
+        	// console.log(ox[key].coinTypePair);
+        	if (ox[key].symbol.includes('btc')) {
+        		var coinName = ox[key].symbol.replace('_btc','').toUpperCase();
+        		// console.log(coinName);
+        		let last = (ox[key].last * 1000);
+				let ask = (ox[key].sell * 1000);
+	            let bid = (ox[key].buy * 1000);
+
+
+	      //       let buyvolume = 
+	    		// let sellvolume = 
+
+	          	arrokex.push({
+	    			symbol: coinName,
+	    			askprice: Number(ask.toFixed(5)),
+	    			bidprice : Number(bid.toFixed(5))
+	    		});
+	          	if (typeof askarr[coinName] == "undefined") {
+				        askarr[coinName] = {};
+				}
+				if (typeof bidarr[coinName] == "undefined") {
+				    	bidarr[coinName] = {};
+				}
+				askarr[coinName].Okex = ask;
+				bidarr[coinName].Okex = bid;
+        	}
+
+
+        }
+        // console.log(arrokex);
     	//===================================================================================================
 
     	// coins["ETH"].Stanko = 455.21;								//ovo radi ovako!
@@ -607,6 +665,17 @@ async function getprices(callback){
 					results[i].Hitbtc = arrhitbtc[n].lastprice;
 					results[i].HitbtcAsk = arrhitbtc[n].askprice;
 					results[i].HitbtcBid = arrhitbtc[n].bidprice;
+				}
+			}
+
+		}
+		for (let i = 0; i < arr.length; i++) {
+			for (let n = 0; n < arrokex.length; n++) {
+				if (arr[i][0] == arrokex[n].symbol) {
+					results[i].OkexSymbol = arrokex[n].symbol;
+					results[i].Okex = arrokex[n].lastprice;
+					results[i].OkexAsk = arrokex[n].askprice;
+					results[i].OkexBid = arrokex[n].bidprice;
 				}
 			}
 

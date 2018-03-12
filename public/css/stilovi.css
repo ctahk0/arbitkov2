@@ -5,4 +5,29 @@ body {
   color: #333;
   background-color: #fff !important;
 }
-div.container { max-width: 1200px }
+
+
+#details {
+	position:absolute;
+	top:30px;
+	right:200px;
+	border: 2px solid black;
+	background-color: #ddd;
+	height: 500px;
+	width: 800px;
+	z-index: 1;
+}
+#x {
+    position: absolute;
+    background: red;
+    color: white;
+    top: 0px;
+    right: 0px;
+}
+
+table.dataTable tbody tr {
+  line-height: 10px;
+}
+table.dataTable {
+  font-size: 0.75em;
+}
