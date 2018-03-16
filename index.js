@@ -6,7 +6,7 @@ var bodyParser = require('body-parser');
 //App setup
 var app = express();
 var server = app.listen(8001, function(){
-	console.log("Server listening on port 8000");
+	console.log("Server listening on port 8001");
 });
 
 //Static files
