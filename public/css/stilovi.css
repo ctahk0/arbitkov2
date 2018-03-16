@@ -8,6 +8,7 @@ body {
 
 
 #details {
+  display:none;
 	position:absolute;
 	top:30px;
 	right:200px;
@@ -30,4 +31,14 @@ table.dataTable tbody tr {
 }
 table.dataTable {
   font-size: 0.75em;
+}
+
+#ask {
+    width: 400px;
+    float:left; /* add this */
+    border: 1px solid black;
+}
+#bid {
+    border: 1px solid black;
+    overflow: hidden; /* if you don't want #second to wrap below #first */
 }

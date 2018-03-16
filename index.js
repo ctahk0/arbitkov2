@@ -16,25 +16,6 @@ app.use(express.static(__dirname + '/public'));
 
 
 // app.use(express.bodyParser());
-
-// parse application/json
-// app.use(bodyParser.json());
-app.use(bodyParser.text({ type: 'text/html' }));
- 
-app.use(function (req, res) {
-  res.setHeader('Content-Type', 'text/plain')
-  res.write('you posted:\n')
-  res.end(JSON.stringify(req.body, null, 2))
-})
-
-
-// app.post('/endpoint', function(req, res){
-// 	var obj = {};
-// 	console.log('body: ' + JSON.stringify(req.body));
-// 	res.send(req.body);
-// });
-
-
 //Socket setup
 var io = socket(server);
 
@@ -48,6 +29,40 @@ io.on('connection', function(socket){
 
 	// io.emit('data',"Emitujem!");
 });
+
+// parse application/json
+app.use(bodyParser.json());
+// app.use(bodyParser.text({ type: 'text/html' }));
+// app.use(bodyParser.text({ type: 'application/json' })); 
+
+app.use(function (req, res) {
+  // res.setHeader('Content-Type', 'text/plain')
+  // res.setHeader('content-type', 'text/javascript');
+  // res.type('application/json');
+  res.setHeader('Content-Type', 'application/json');
+  res.write('server receive:\n')
+  res.end(JSON.stringify(req.body, null, 2))
+
+  console.log("Marketi", req.body);
+  if (req.body !='') {
+  	  getdetails(req.body, function(ret){
+	  	console.log(ret[1]);
+	  	io.emit('datadetails',ret);
+  });
+  }
+
+})
+
+
+
+// app.post('/endpoint', function(req, res){
+// 	var obj = {};
+// 	console.log('body: ' + JSON.stringify(req.body));
+// 	res.send(req.body);
+// });
+
+
+
 
 setInterval(function(){
 	getprices(function(returnval) {
@@ -690,6 +705,257 @@ async function getprices(callback){
 	}
 
 };
+
+
+//============================================ Details ============================================================
+async function getdetails(markets, cb){
+	console.log(markets.lo, markets.hi);
+	var ask_results = [];
+	var bid_results = [];
+	var coin;
+	try {
+		switch (markets.lo) {
+		  case 'Binance':
+				    coin = markets.coin+'BTC';
+				    const binance = await axios('https://api.binance.com/api/v1/depth?symbol='+coin);
+
+				  	for (let key in binance.data.asks) {;
+				  		ask_results.push({
+				  			// market: 'Binance',
+				  			// side: 'asks',
+				  			price: Number(binance.data.asks[key][0]),
+				  			qty: Number(binance.data.asks[key][1]),
+				  			amount: binance.data.asks[key][0]*binance.data.asks[key][1]
+				  		});
+				  	}
+		    break;
+		  case 'Bittrex':
+		  			coin = 'BTC-'+markets.coin;
+				    const bittrex = await axios('https://bittrex.com/api/v1.1/public/getorderbook?market='+coin+'&type=both');
+				    for (let key in bittrex.data.result.sell) {
+				    	// console.log(bittrex.data.result.sell[key].Rate);
+				    	ask_results.push({
+				  			// market: 'Bittrex',
+				  			// side: 'asks',
+				  			price: Number(bittrex.data.result.sell[key].Rate),
+				  			qty: Number(bittrex.data.result.sell[key].Quantity),
+				  			amount: bittrex.data.result.sell[key].Quantity*bittrex.data.result.sell[key].Rate
+				  		});
+				    }
+		  	break;
+		  case 'Bitfinex':
+		  		coin = markets.coin+'BTC';
+		  		const bitfinex = await axios('https://api.bitfinex.com/v1/book/'+coin);
+		  		for (let key in bitfinex.data.asks) {
+				  		ask_results.push({
+				  			price: Number(bitfinex.data.asks[key].price),
+				  			qty: Number(bitfinex.data.asks[key].amount),
+				  			amount: bitfinex.data.asks[key].amount*bitfinex.data.asks[key].price
+				  		});
+		  		}
+		    break;
+		  case 'Poloniex':
+		  		coin = 'BTC_'+markets.coin;
+		  		const poloniex = await axios('https://poloniex.com/public?command=returnOrderBook&currencyPair='+coin+'&depth=50');
+		  		for (let key in poloniex.data.asks) {
+				  		ask_results.push({
+				  			price: Number(poloniex.data.asks[key][0]),
+				  			qty: Number(poloniex.data.asks[key][1]),
+				  			amount: poloniex.data.asks[key][0]*poloniex.data.asks[key][1]
+				  		});
+		  		}
+		    break;
+		  case 'Hitbtc':
+		  		coin = markets.coin+'BTC';
+		  		const hitbtc = await axios('https://api.hitbtc.com/api/2/public/orderbook/'+coin);
+		  		for (let key in hitbtc.data.ask) {
+				  		ask_results.push({
+				  			price: Number(hitbtc.data.ask[key].price),
+				  			qty: Number(hitbtc.data.ask[key].size),
+				  			amount: hitbtc.data.ask[key].price*hitbtc.data.ask[key].size
+				  		});
+		  		}
+		    break;
+		  case 'Okex':
+		  		coin = markets.coin.toLowerCase()+'_btc';
+		  		const okex = await axios('https://www.okex.com/api/v1/depth.do?symbol='+coin);
+		  		for (let key in okex.data.asks) {
+				  		ask_results.push({
+				  			price: Number(okex.data.asks[key][0]),
+				  			qty: Number(okex.data.asks[key][1]),
+				  			amount: okex.data.asks[key][0]*okex.data.asks[key][1]
+				  		});
+		  		}
+		  		ask_results.sort(function(a, b) {
+				    return parseFloat(a.price) - parseFloat(b.price);
+				});
+		  		// console.log(ask_results);
+		    break;
+		  case 'Kucoin':
+		  			coin = markets.coin+'-BTC';
+				    const kucoin = await axios('https://api.kucoin.com/v1/'+coin+'/open/orders');
+				    console.log('https://api.kucoin.com/v1/'+coin+'/open/orders');
+				    for (let key in kucoin.data.SELL) {
+				    	// console.log(key);
+				    	ask_results.push({
+				  			// market: 'kucoin',
+				  			// side: 'bids',
+				  			price: Number(kucoin.data.SELL[key][0]),
+				  			qty: Number(kucoin.data.SELL[key][1]),
+				  			amount: kucoin.data.SELL[key][1]*kucoin.data.SELL[key][0]
+				  		});
+				    }
+
+		    break;
+		  case 'Kraken':
+		    break;
+		  default:
+		    // console.log('Sorry, we are out of ' + expr + '.');
+		}
+		
+		switch (markets.hi) {
+		  case 'Binance':
+				    coin = markets.coin+'BTC';
+				    const binance = await axios('https://api.binance.com/api/v1/depth?symbol='+coin);
+				  	for (let key in binance.data.bids) {
+				  		bid_results.push({
+				  			// market: 'Binance',
+				  			// side: 'bids',
+				  			price: Number(binance.data.bids[key][0]),
+				  			qty: Number(binance.data.bids[key][1]),
+				  			amount: binance.data.bids[key][0]*binance.data.bids[key][1]
+				  		});
+				  	}
+		    break;
+		  case 'Bittrex':
+		  			coin = 'BTC-'+markets.coin;
+				    const bittrex = await axios('https://bittrex.com/api/v1.1/public/getorderbook?market='+coin+'&type=both');
+				    for (let key in bittrex.data.result.buy) {
+				    	bid_results.push({
+				  			// market: 'Bittrex',
+				  			// side: 'bids',
+				  			price: Number(bittrex.data.result.buy[key].Rate),
+				  			qty: Number(bittrex.data.result.buy[key].Quantity),
+				  			amount: bittrex.data.result.buy[key].Quantity*bittrex.data.result.buy[key].Rate
+				  		});
+				    }
+		  	break;
+		  case 'Bitfinex':
+		  		coin = markets.coin+'BTC';
+		  		const bitfinex = await axios('https://api.bitfinex.com/v1/book/'+coin);
+		  		for (let key in bitfinex.data.bids) {
+				  		bid_results.push({
+				  			price: Number(bitfinex.data.bids[key].price),
+				  			qty: Number(bitfinex.data.bids[key].amount),
+				  			amount: bitfinex.data.bids[key].amount*bitfinex.data.bids[key].price
+				  		});
+		  		}
+		    break;
+		  case 'Poloniex':
+		  		coin = 'BTC_'+markets.coin;
+		  		const poloniex = await axios('https://poloniex.com/public?command=returnOrderBook&currencyPair='+coin+'&depth=50');
+		  		for (let key in poloniex.data.bids) {
+				  		bid_results.push({
+				  			price: Number(poloniex.data.bids[key][0]),
+				  			qty: Number(poloniex.data.bids[key][1]),
+				  			amount: poloniex.data.bids[key][0]*poloniex.data.bids[key][1]
+				  		});
+		  		}
+		    break;
+		  case 'Hitbtc':
+		  		coin = markets.coin+'BTC';
+		  		const hitbtc = await axios('https://api.hitbtc.com/api/2/public/orderbook/'+coin);
+		  		for (let key in hitbtc.data.bid) {
+				  		bid_results.push({
+				  			price: Number(hitbtc.data.bid[key].price),
+				  			qty: Number(hitbtc.data.bid[key].size),
+				  			amount: hitbtc.data.bid[key].price*hitbtc.data.bid[key].size
+				  		});
+		  		}
+		    break;
+		  case 'Okex':
+		  		coin = markets.coin.toLowerCase()+'_btc';
+		  		const okex = await axios('https://www.okex.com/api/v1/depth.do?symbol='+coin);
+		  		for (let key in okex.data.bids) {
+				  		bid_results.push({
+				  			price: Number(okex.data.bids[key][0]),
+				  			qty: Number(okex.data.bids[key][1]),
+				  			amount: okex.data.bids[key][0]*okex.data.bids[key][1]
+				  		});
+		  		}
+		    break;
+		  case 'Kucoin':
+		  			coin = markets.coin+'-BTC';
+				    const kucoin = await axios('https://api.kucoin.com/v1/'+coin+'/open/orders');
+				    console.log('https://api.kucoin.com/v1/'+coin+'/open/orders');
+				    for (let key in kucoin.data.BUY) {
+				    	// console.log(key);
+				    	bid_results.push({
+				  			// market: 'kucoin',
+				  			// side: 'bids',
+				  			price: Number(kucoin.data.BUY[key][0]),
+				  			qty: Number(kucoin.data.BUY[key][1]),
+				  			amount: kucoin.data.BUY[key][1]*kucoin.data.BUY[key][0]
+				  		});
+				    }
+		    break;
+		  case 'Kraken':
+		    break;
+		  default:
+		    // console.log('Sorry, we are out of ' + expr + '.');
+		}
+
+		var aamount =0;
+		var aqty = 0;
+		var bamount =0;
+		var bqty = 0;
+		var final = [];
+		var avgprice=0;
+		var bavgprice=0;
+		// console.log(ask_results);
+
+	    for (let item in ask_results) {
+	    	if (aamount < 0.1) {
+	     		aamount += ask_results[item].amount;
+	            aqty += ask_results[item].qty;
+	        	avgprice = aamount/aqty;
+	    	}else{
+	        	let tmpamount = 0.1/avgprice;
+	        	final.push({
+	                lo: markets.lo,
+	                askqty: tmpamount,
+	                avgprice: avgprice
+	        	});
+	        	break;
+	    	}
+	    }
+	    
+	    for (let item in bid_results) {
+	    	if (bamount < 0.1) {
+	     		bamount += bid_results[item].amount;
+	            bqty += bid_results[item].qty;
+	        	bavgprice = bamount/bqty;
+	    	}else{
+	        	let tmpamount = 0.1/bavgprice;
+	        	final.push({
+	                hi: markets.hi,
+	                bidqty: tmpamount,
+	                avgprice: bavgprice
+	        	});
+	        	break;
+	    	}
+	    }
+	    var askres = ask_results.slice(0, 15);
+	    var bidres = bid_results.slice(0, 15);
+	  	cb([final,askres,bidres]);
+	}
+	catch (e) {
+	    console.error(e); // 💩
+	}
+
+};
+
+//==============================================================================================================
 
 Number.prototype.formatMoney = function(c, d, t){
 var n = this, 
