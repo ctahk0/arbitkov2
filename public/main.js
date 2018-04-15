@@ -79,7 +79,7 @@ $(document).ready(function() {
 						data: JSON.stringify(markets),
 					    contentType: "application/json; charset=utf-8",
 					    dataType: "json",
-                        url: 'http://clockwellsoftware.xyz:8001/',						
+                        url: 'http://japauto.parts:8001',						
                         success: function(data) {
                             console.log("success");
                             // console.log("Ovo je iz klijenta", data);
